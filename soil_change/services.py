@@ -1,4 +1,10 @@
-"""Concrete implementations for reading, processing and reporting."""
+"""Concrete implementations for reading, processing and reporting.
+
+Each class in this module owns one clear responsibility:
+- IO (read/write rasters),
+- transformation (NDVI, classification),
+- reporting (text stats + visualization).
+"""
 
 from pathlib import Path
 
@@ -12,8 +18,12 @@ class RasterioBandReader:
     """Single responsibility: read raster data from disk."""
 
     def read_band(self, path: Path) -> tuple[np.ndarray, dict]:
+        """Read a single-band raster and return numeric values + geospatial profile."""
         with rasterio.open(path) as src:
+            # `read(1)` extracts the first (and here, only) band.
+            # Float32 normalizes numeric precision for downstream processing.
             band = src.read(1).astype(np.float32)
+            # Copy metadata so output writers can preserve georeferencing.
             meta = src.meta.copy()
         return band, meta
 
@@ -22,7 +32,9 @@ class GeoTiffWriter:
     """Single responsibility: write arrays as GeoTIFF rasters."""
 
     def write(self, array: np.ndarray, meta: dict, path: Path) -> None:
+        """Write one array to a GeoTIFF file while preserving spatial metadata."""
         meta_out = meta.copy()
+        # Enforce a single-band float32 GeoTIFF output profile.
         meta_out.update(dtype="float32", count=1, driver="GTiff")
         with rasterio.open(path, "w", **meta_out) as dst:
             dst.write(array.astype(np.float32), 1)
@@ -34,8 +46,19 @@ class NDVICalculator:
 
     @staticmethod
     def compute(red: np.ndarray, nir: np.ndarray) -> np.ndarray:
+        """Compute NDVI pixel-wise from RED and NIR arrays.
+
+        Formula:
+            NDVI = (NIR - RED) / (NIR + RED)
+
+        Numerical safety:
+        - ignore division/invalid warnings (expected in no-data/zero-sum pixels),
+        - return NaN where denominator is zero.
+        """
+        # Avoid noisy runtime warnings for known invalid divisions.
         np.seterr(divide="ignore", invalid="ignore")
         denominator = nir + red
+        # Where denominator is zero, NDVI is undefined -> NaN.
         ndvi = np.where(denominator == 0, np.nan, (nir - red) / denominator)
         return ndvi.astype(np.float32)
 
@@ -44,6 +67,13 @@ class ThresholdChangeClassifier:
     """Classify NDVI changes into loss/stable/gain classes."""
 
     def classify(self, diff: np.ndarray, threshold: float) -> np.ndarray:
+        """Classify NDVI delta values using a symmetric threshold.
+
+        Rules:
+        - `diff < -threshold` => -1 (vegetation loss)
+        - `diff > threshold`  => +1 (vegetation gain)
+        - otherwise           =>  0 (no significant change)
+        """
         change = np.zeros_like(diff, dtype=np.float32)
         change[diff < -threshold] = -1
         change[diff > threshold] = 1
@@ -54,12 +84,15 @@ class ConsoleStatsReporter:
     """Single responsibility: print numeric summaries to stdout."""
 
     def print_change_stats(self, change: np.ndarray) -> None:
+        """Print counts and percentages for all change classes."""
+        # Use only finite values to exclude invalid/no-data cells.
         valid_pixels = np.isfinite(change)
         total = int(np.sum(valid_pixels))
         if total == 0:
             print("\nNo valid pixels available for statistics.\n")
             return
 
+        # Count pixels in each semantic class.
         loss = int(np.sum(change == -1))
         gain = int(np.sum(change == 1))
         stable = int(np.sum(change == 0))
@@ -85,6 +118,11 @@ class MatplotlibResultsPlotter:
         threshold: float,
         output_path: Path,
     ) -> None:
+        """Render a 2x2 dashboard (NDVI1, NDVI2, delta, classified map).
+
+        The visual style is intentionally dark-themed to improve contrast in
+        presentations and keep focus on color-coded raster information.
+        """
         fig, axes = plt.subplots(2, 2, figsize=(14, 11))
         fig.patch.set_facecolor("#0d1117")
         for ax in axes.flat:
@@ -102,6 +140,7 @@ class MatplotlibResultsPlotter:
             vmax: float,
             label: str = "NDVI",
         ) -> None:
+            """Draw one raster subplot with title and colorbar."""
             im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
             ax.set_title(title, color="white", fontsize=13, pad=10)
             cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
@@ -122,6 +161,7 @@ class MatplotlibResultsPlotter:
             label="Delta NDVI",
         )
 
+        # Discrete 3-class colormap for categorical change representation.
         cmap_change = mcolors.ListedColormap(["#f85149", "#8b949e", "#3fb950"])
         bounds = [-1.5, -0.5, 0.5, 1.5]
         norm = mcolors.BoundaryNorm(bounds, cmap_change.N)
@@ -146,4 +186,5 @@ class MatplotlibResultsPlotter:
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         plt.savefig(output_path, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
         print(f"  ✓ Figure saved: {output_path}")
+        # Keep interactive behavior for local exploratory runs.
         plt.show()
