@@ -63,13 +63,13 @@ OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 DATE_1 = ScenePaths(
-    label="2025-11",
+    label="2025-11-22",
     red=DATA_DIR / "2025-11-22/T31TCF_20251122T104249_B04_10m.jp2",
     nir=DATA_DIR / "2025-11-22/T31TCF_20251122T104249_B08_10m.jp2",
 )
 
 DATE_2 = ScenePaths(
-    label="2023-12",
+    label="2026-04-26",
     red=DATA_DIR / "2026-04-26/T31TCF_20260426T104021_B04_10m.jp2",
     nir=DATA_DIR / "2026-04-26/T31TCF_20260426T104021_B08_10m.jp2",
 )

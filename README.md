@@ -250,6 +250,14 @@ These limitations are documented by design to show critical thinking and transpa
 
 Sentinel-2 L2A products are available from [Copernicus Data Space](https://dataspace.copernicus.eu/).
 
+Images used in this project were downloaded from Copernicus Data Space with the following search filters:
+
+- **Satellite mission:** Sentinel-2
+- **Product level:** L2A *(Level-2A; atmospherically corrected surface reflectance product)*
+- **Cloud cover filter:** up to 10%
+- **Geographic zone:** area covering Delta de l'Ebre and Camp de Tarragona
+- **Acquisition dates used in this analysis:** 2025-11-22 and 2026-04-26
+
 Recommended good practices for robust comparisons:
 
 - same tile and geographic extent,
