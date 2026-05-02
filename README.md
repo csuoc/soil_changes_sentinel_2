@@ -2,6 +2,8 @@
 
 Remote sensing project for detecting vegetation change between two dates using Sentinel-2 L2A bands (`B04` and `B08`), computing NDVI, classifying change, and producing geospatial outputs ready for GIS analysis.
 
+![Detection Result](./outputs/change_detection_results.png)
+
 ## Analysis Objective
 
 The main goal is to build a reproducible and explainable workflow that can:
@@ -218,8 +220,6 @@ Why these outputs together:
 - **Dashboard figure** speeds up QA and technical communication.
 
 ## Primary Conclusions (Current Run)
-
-![Detection Result](./outputs/change_detection_results.png)
 
 With the configuration and data currently included in the repository, the resulting statistics are:
 
