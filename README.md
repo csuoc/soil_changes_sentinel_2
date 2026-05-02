@@ -10,7 +10,22 @@ The main goal is to build a reproducible and explainable workflow that can:
 - identify areas with vegetation loss, stability, or gain,
 - deliver quantitative and visual outputs in a reusable format.
 
-This repository is intended as a technical portfolio piece: it not only runs the analysis, but also demonstrates a clean architecture (influenced by SOLID principles) to support maintainability and extension.
+This repository is designed as a practical and maintainable remote-sensing workflow: it not only runs the analysis, but also demonstrates a clean architecture (influenced by SOLID principles) to support extension and long-term reuse.
+
+## Why This Project Is Useful
+
+This project demonstrates more than just "running NDVI":
+
+- **Earth observation domain awareness:** understanding of spectral bands, temporal comparison, and geospatial outputs.
+- **Engineering discipline:** modular architecture, typed protocols, test coverage, and documented assumptions.
+- **Communication ability:** results are presented in both machine-consumable formats (GeoTIFF) and stakeholder-friendly format (summary figure + statistics).
+
+In practical terms, this type of workflow is useful for:
+
+- environmental monitoring,
+- land management and planning,
+- agriculture and vegetation stress screening,
+- detecting potentially relevant change areas before deeper investigation.
 
 ## Methodological Basis (NDVI)
 
@@ -25,10 +40,36 @@ Where:
 - `B04` = Red band
 - `B08` = Near-infrared band (NIR)
 
+These band assignments are defined by the official Sentinel-2 MSI spectral specification:
+
+- `B04` is centered in the red region of the spectrum,
+- `B08` is centered in near-infrared (NIR),
+- both are provided at 10 m spatial resolution in Sentinel-2 L2A products.
+
+Why this matters:
+
+- vegetation tends to absorb red light (photosynthetic activity),
+- vegetation tends to strongly reflect NIR,
+- the contrast between red absorption and NIR reflectance is what makes NDVI informative.
+
 General interpretation:
 
 - high NDVI values are typically associated with denser / healthier vegetation,
 - low or negative values are typically associated with bare soil, water, urban surfaces, or strongly degraded vegetation.
+
+Typical NDVI ranges (rule-of-thumb, context dependent):
+
+- **< 0.0**: water, clouds, shadows, snow, or non-vegetated surfaces.
+- **0.0 to 0.2**: bare soil / sparse vegetation.
+- **0.2 to 0.5**: moderate vegetation.
+- **> 0.5**: dense and active vegetation.
+
+Important caveats when interpreting NDVI:
+
+- NDVI is not a direct biomass measurement; it is a proxy.
+- seasonality and phenology can produce legitimate changes unrelated to disturbance.
+- clouds, haze, shadows, and aerosols can bias pixel values.
+- sensor/view geometry and atmospheric conditions can influence comparability.
 
 ## Workflow Followed (Step by Step)
 
@@ -56,6 +97,19 @@ General interpretation:
 7. **Final visualization**  
    A 4-panel figure is generated for fast review and result communication.
 
+## Why Temporal Comparison Adds Value
+
+A single-date NDVI map tells "what vegetation looks like now."  
+A two-date NDVI comparison tells "how vegetation changed over time."
+
+This distinction is operationally valuable because change detection helps prioritize action:
+
+- where to inspect potential degradation,
+- where vegetation recovery might be occurring,
+- where conditions remain stable and may need less intervention.
+
+In short, temporal differencing converts static EO snapshots into decision-oriented insights.
+
 ## Project Architecture
 
 ```text
@@ -79,7 +133,21 @@ soil_changes_sentinel_2/
 
 - It separates technical responsibilities by module.
 - It allows components to be replaced without rewriting orchestration.
-- It improves readability for technical review (interview / portfolio context).
+- It improves readability for technical review and team collaboration.
+
+## Libraries and Their Purpose
+
+- `numpy`: core numerical engine for pixel-wise array operations (NDVI math and classification).
+- `rasterio`: geospatial raster IO (read JP2, write GeoTIFF, preserve CRS/transform metadata).
+- `matplotlib`: visual communication layer (4-panel figure for quality check and reporting).
+- `geopandas` *(optional)*: prepared for vector overlays / geospatial enrichment in future expansions.
+- `jupyter` *(optional)*: exploratory analysis and experimentation workflow.
+
+This stack balances:
+
+- reproducibility,
+- geospatial correctness,
+- and clarity of communication.
 
 ## Installation
 
@@ -131,10 +199,23 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 ## Generated Outputs
 
-- `ndvi_<label>.tif`: NDVI per date (georeferenced GeoTIFF).
-- `ndvi_difference.tif`: continuous NDVI change (`date_2 - date_1`).
-- `change_map.tif`: classified map (`-1`, `0`, `+1`).
-- `change_detection_results.png`: 4-panel visual dashboard.
+The pipeline intentionally generates four complementary outputs:
+
+1. `ndvi_<label>.tif` (date 1): baseline vegetation state.
+2. `ndvi_<label>.tif` (date 2): comparison-date vegetation state.
+3. `ndvi_difference.tif`: continuous change magnitude and direction (`date_2 - date_1`).
+4. `change_map.tif`: thresholded semantic classes (`-1`, `0`, `+1`) for easier interpretation and reporting.
+
+Additionally:
+
+- `change_detection_results.png` combines all products in a single visual dashboard for quick review.
+
+Why these outputs together:
+
+- **Per-date NDVI rasters** preserve full information for independent analysis.
+- **Difference raster** exposes nuanced gradient changes that class labels might hide.
+- **Classified map** simplifies communication to non-specialists and supports KPI-style summaries.
+- **Dashboard figure** speeds up QA and technical communication.
 
 ## Primary Conclusions (Current Run)
 
@@ -153,6 +234,17 @@ Initial interpretation:
 - Detected gain is marginal compared with the loss signal.
 
 > Technical note: these conclusions are sensitive to cloud contamination, seasonality, acquisition geometry, and the chosen threshold. For operational decision-making, cloud/SCL masking and additional validation are recommended.
+
+## Limitations and Quality Considerations
+
+Current implementation is intentionally clear and educational, but should be strengthened for production use:
+
+- no explicit cloud/shadow masking yet (SCL integration recommended),
+- no atmospheric quality filtering beyond source product assumptions,
+- two-date comparison only (longer time series would improve robustness),
+- no uncertainty quantification yet.
+
+These limitations are documented by design to show critical thinking and transparent engineering judgment.
 
 ## Data Source
 

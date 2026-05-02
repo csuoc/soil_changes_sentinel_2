@@ -54,6 +54,11 @@ class NDVICalculator:
         Numerical safety:
         - ignore division/invalid warnings (expected in no-data/zero-sum pixels),
         - return NaN where denominator is zero.
+
+        Interpretation guidance:
+        - NDVI is theoretically bounded to [-1, 1].
+        - Typical healthy vegetation tends toward higher positive values.
+        - Negative or near-zero values often indicate non-vegetated surfaces.
         """
         # Avoid noisy runtime warnings for known invalid divisions.
         np.seterr(divide="ignore", invalid="ignore")

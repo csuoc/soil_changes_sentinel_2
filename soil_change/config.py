@@ -25,6 +25,12 @@ class ScenePaths:
     Why these two bands:
     NDVI relies specifically on RED and NIR reflectance to approximate
     vegetation vigor/activity.
+
+    Sentinel-2 reference:
+    - B04 corresponds to the red spectral region.
+    - B08 corresponds to the near-infrared (NIR) spectral region.
+    Both are commonly used together for NDVI and are available at 10 m in
+    Sentinel-2 L2A products.
     """
 
     label: str
