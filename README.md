@@ -70,6 +70,7 @@ soil_changes_sentinel_2/
 ├── data/
 │   └── 10m/                   # Input Sentinel-2 bands
 ├── outputs/                   # Generated results (GeoTIFF + PNG)
+├── tests/                     # Unit tests (unittest, synthetic data, no raster files needed)
 ├── requirements.txt
 └── README.md
 ```
@@ -107,6 +108,26 @@ python main.py
 ```
 
 Results will be generated in `outputs/`.
+
+## Unit Tests
+
+This project includes unit tests implemented with Python's built-in `unittest` framework.
+The test suite is fast, deterministic, and based on synthetic in-memory arrays so it does not depend on external Sentinel files.
+
+### What is covered
+
+- `tests/test_services.py`
+  - `NDVICalculator.compute`: validates NDVI math and zero-denominator handling (`NaN`).
+  - `ThresholdChangeClassifier.classify`: validates loss/stable/gain assignment from threshold rules.
+  - `ConsoleStatsReporter.print_change_stats`: validates printed class summaries and no-valid-pixel edge case.
+- `tests/test_pipeline.py`
+  - `ChangeDetectionPipeline.run`: validates orchestration behavior using test doubles (reader/writer/classifier/plotter/reporter), including read order, output names, and downstream calls.
+
+### Run the tests
+
+```bash
+python -m unittest discover -s tests -p "test_*.py" -v
+```
 
 ## Generated Outputs
 
