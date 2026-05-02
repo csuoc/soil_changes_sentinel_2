@@ -117,6 +117,8 @@ Results will be generated in `outputs/`.
 
 ## Primary Conclusions (Current Run)
 
+![Detection Result](./outputs/change_detection_results.png)
+
 With the configuration and data currently included in the repository, the resulting statistics are:
 
 - **Vegetation loss:** 36,199,811 px (**30.0%**)
