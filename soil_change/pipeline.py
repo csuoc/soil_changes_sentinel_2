@@ -5,10 +5,16 @@ This module contains:
 2) a factory function (`build_pipeline`) that injects default implementations.
 
 The coordinator focuses on sequencing and business flow, not low-level details.
+
+Collaborators injected into `ChangeDetectionPipeline` must provide the methods
+that `run()` calls on them (`read_band`, `write`, `classify`, `plot`,
+`print_change_stats`). Typical implementations live in `services.py`; tests
+often pass small substitutes with the same method names — no inheritance needed.
 """
 
+from typing import Any
+
 from .config import DEFAULT_CONFIG, PipelineConfig
-from .protocols import BandReader, ChangeClassifier, RasterWriter, ResultsPlotter, StatsReporter
 from .services import (
     ConsoleStatsReporter,
     GeoTiffWriter,
@@ -20,22 +26,16 @@ from .services import (
 
 
 class ChangeDetectionPipeline:
-    """Orchestrates workflow using abstractions (Open/Closed + DIP).
-
-    Design intent:
-    - This class should read as a "story" of the analysis pipeline.
-    - It receives collaborators via constructor injection, so each collaborator can
-      be swapped independently (different IO backend, different classifier, etc.).
-    """
+    """Runs the NDVI workflow; collaborators are injected in `__init__`."""
 
     def __init__(
         self,
         config: PipelineConfig,
-        reader: BandReader,
-        writer: RasterWriter,
-        classifier: ChangeClassifier,
-        plotter: ResultsPlotter,
-        stats_reporter: StatsReporter,
+        reader: Any,
+        writer: Any,
+        classifier: Any,
+        plotter: Any,
+        stats_reporter: Any,
     ) -> None:
         # Save all dependencies as instance attributes so they are available through
         # the pipeline lifecycle and can be mocked/replaced in tests.

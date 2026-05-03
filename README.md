@@ -19,7 +19,7 @@ This repository is designed as a practical and maintainable remote-sensing workf
 This project demonstrates more than just "running NDVI":
 
 - **Earth observation domain awareness:** understanding of spectral bands, temporal comparison, and geospatial outputs.
-- **Engineering discipline:** modular architecture, typed protocols, test coverage, and documented assumptions.
+- **Engineering discipline:** modular architecture, typed pipeline collaborators, test coverage, and documented assumptions.
 - **Communication ability:** results are presented in both machine-consumable formats (GeoTIFF) and stakeholder-friendly format (summary figure + statistics).
 
 In practical terms, this type of workflow is useful for:
@@ -120,8 +120,7 @@ soil_changes_sentinel_2/
 ├── soil_change/
 │   ├── __init__.py
 │   ├── config.py              # Configuration dataclasses and default paths
-│   ├── protocols.py           # Contracts (Protocol) for DIP
-│   ├── services.py            # Concrete implementations (IO, NDVI, classification, plots)
+│   ├── services.py            # IO, NDVI, classification, plots (used by pipeline)
 │   └── pipeline.py            # Workflow orchestration + dependency injection
 ├── data/
 │   └── 10m/                   # Input Sentinel-2 bands
